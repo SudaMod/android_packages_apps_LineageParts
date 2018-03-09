@@ -30,4 +30,7 @@
   <string name="recents_clear_all_location_bottom_right">右下方</string>
   <string name="recents_clear_all_location_bottom_left">左下方</string>
   <string name="recents_clear_all_location_bottom_center">下方中央</string>
+  <!-- SU indicator -->
+  <string name="show_su_indicator_title">启用SU图标</string>
+  <string name="show_su_indicator_summary">选项可启用或禁用本地超级用户图标</string>
 </resources>

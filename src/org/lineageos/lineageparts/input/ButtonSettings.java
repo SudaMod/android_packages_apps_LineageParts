@@ -17,6 +17,7 @@
 
 package org.lineageos.lineageparts.input;
 
+import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -425,6 +426,53 @@ public class ButtonSettings extends SettingsPreferenceFragment implements
                 mVolumeWakeScreen.setDisableDependentsState(true);
             }
         }
+
+        // Override key actions on Go devices in order to hide any unsupported features
+        if (ActivityManager.isLowRamDeviceStatic()) {
+            String[] actionEntriesGo = res.getStringArray(R.array.hardware_keys_action_entries_go);
+            String[] actionValuesGo = res.getStringArray(R.array.hardware_keys_action_values_go);
+
+            if (hasHomeKey) {
+                mHomeLongPressAction.setEntries(actionEntriesGo);
+                mHomeLongPressAction.setEntryValues(actionValuesGo);
+
+                mHomeDoubleTapAction.setEntries(actionEntriesGo);
+                mHomeDoubleTapAction.setEntryValues(actionValuesGo);
+            }
+
+            if (hasMenuKey) {
+                mMenuPressAction.setEntries(actionEntriesGo);
+                mMenuPressAction.setEntryValues(actionValuesGo);
+
+                mMenuLongPressAction.setEntries(actionEntriesGo);
+                mMenuLongPressAction.setEntryValues(actionValuesGo);
+            }
+
+            if (hasAssistKey) {
+                mAssistPressAction.setEntries(actionEntriesGo);
+                mAssistPressAction.setEntryValues(actionValuesGo);
+
+                mAssistLongPressAction.setEntries(actionEntriesGo);
+                mAssistLongPressAction.setEntryValues(actionValuesGo);
+            }
+
+            if (hasAppSwitchKey) {
+                mAppSwitchPressAction.setEntries(actionEntriesGo);
+                mAppSwitchPressAction.setEntryValues(actionValuesGo);
+
+                mAppSwitchLongPressAction.setEntries(actionEntriesGo);
+                mAppSwitchLongPressAction.setEntryValues(actionValuesGo);
+            }
+
+            mNavigationHomeLongPressAction.setEntries(actionEntriesGo);
+            mNavigationHomeLongPressAction.setEntryValues(actionValuesGo);
+
+            mNavigationHomeDoubleTapAction.setEntries(actionEntriesGo);
+            mNavigationHomeDoubleTapAction.setEntryValues(actionValuesGo);
+
+            mNavigationAppSwitchLongPressAction.setEntries(actionEntriesGo);
+            mNavigationAppSwitchLongPressAction.setEntryValues(actionValuesGo);
+        }
     }
 
     @Override
@@ -615,18 +663,20 @@ public class ButtonSettings extends SettingsPreferenceFragment implements
     @Override
     public boolean onPreferenceTreeClick(Preference preference) {
         if (preference == mSwapVolumeButtons) {
-            int value = mSwapVolumeButtons.isChecked()
-                    ? (ScreenType.isTablet(getActivity()) ? 2 : 1) : 0;
-            if (value == 2) {
-                Display defaultDisplay = getActivity().getWindowManager().getDefaultDisplay();
+            int value;
 
-                DisplayInfo displayInfo = new DisplayInfo();
-                defaultDisplay.getDisplayInfo(displayInfo);
-
-                // Not all tablets are landscape
-                if (displayInfo.getNaturalWidth() < displayInfo.getNaturalHeight()) {
-                    value = 1;
-                }
+            if (mSwapVolumeButtons.isChecked()) {
+                /* The native inputflinger service uses the same logic of:
+                 *   1 - the volume rocker is on one the sides, relative to the natural
+                 *       orientation of the display (true for all phones and most tablets)
+                 *   2 - the volume rocker is on the top or bottom, relative to the
+                 *       natural orientation of the display (true for some tablets)
+                 */
+                value = getResources().getInteger(
+                        R.integer.config_volumeRockerVsDisplayOrientation);
+            } else {
+                /* Disable the re-orient functionality */
+                value = 0;
             }
             LineageSettings.System.putInt(getActivity().getContentResolver(),
                     LineageSettings.System.SWAP_VOLUME_KEYS_ON_ROTATION, value);
